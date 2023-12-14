@@ -1,0 +1,38 @@
+"""AoC 14, 2023: Parabolic Reflector Dish."""
+
+# Standard library imports
+import pathlib
+import sys
+import tomllib
+from typing import List, Dict
+
+
+INPUT_PATH = pathlib.Path(__file__).parent / "INPUT.toml"
+INPUT_TOML: Dict[str, List[str]] = tomllib.loads(INPUT_PATH.read_text())
+INPUT: List[str] = INPUT_TOML['input_data']
+
+def parse_data(input_data):
+    """Parse input."""
+    return input_data.split('\n')
+
+
+def part1(data):
+    """Solve part 1."""
+
+
+def part2(data):
+    """Solve part 2."""
+
+
+def solve(puzzle_input):
+    """Solve the puzzle for the given input."""
+    data = parse_data(puzzle_input)
+    yield part1(data)
+    yield part2(data)
+
+
+if __name__ == "__main__":
+    for path in sys.argv[1:]:
+        print(f"\n{path}:")
+        solutions = solve(INPUT)
+        print("\n".join(str(solution) for solution in solutions))
