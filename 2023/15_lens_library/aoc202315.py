@@ -50,20 +50,34 @@ def ass_op(string):
     label, power = string.split('=')
     box = hash_algorithm(label)
     lens = (str(label), int(power))
-    for i, boxed_lens in enumerate(LIGHT_BOX[box]):
-        if lens == boxed_lens:
-            LIGHT_BOX[box][i] = lens
-        else:
+    if not LIGHT_BOX[box]:
+        LIGHT_BOX[box].append(lens)
+    else:
+        found_match = False
+        for i, boxed_lens in enumerate(LIGHT_BOX[box]):
+            if lens[0] == boxed_lens[0]:
+                LIGHT_BOX[box][i] = lens
+                found_match = True
+                break
+
+        if not found_match:
             LIGHT_BOX[box].append(lens)
 
-
 def neg_op(string):
-    label = string.split('-')
+    label = string.replace('-', '')
     box = hash_algorithm(label)
     lens = (label,)
+
+    found_match = False
     for i, boxed_lens in enumerate(LIGHT_BOX[box]):
         if lens[0] in LIGHT_BOX[box][i][0]:
+            found_match = True
             LIGHT_BOX[box].remove(boxed_lens)
+            break
+
+    if found_match:
+        # Move remaining lenses forward
+        LIGHT_BOX[box] = [l for l in LIGHT_BOX[box] if l[0] != label]
 
 
 def focusing_power(light_box: Dict[int, List[tuple]]) -> int:
@@ -80,6 +94,8 @@ def focusing_power(light_box: Dict[int, List[tuple]]) -> int:
 
 def part2(data):
     """Solve part 2."""
+    lens_sorter(data)
+    return focusing_power(LIGHT_BOX)
 
 
 def solve(puzzle_input):
