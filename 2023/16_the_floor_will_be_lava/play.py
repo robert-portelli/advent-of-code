@@ -15,42 +15,36 @@ grid = np.array([
     ['.', '.', '/', '/', '.', '|', '.', '.', '.', '.']
 ], dtype='<U1')
 
+RIGHT = {'direction': (0, 1), 'heading': 'right', 'char': '>', }
+DOWN = {'direction': (1, 0), 'heading': 'down', 'char': 'v', }
+LEFT = {'direction': (0, -1), 'heading': 'left', 'char': '<', }
+UP = {'direction': (-1, 0), 'heading': 'up', 'char': '^', }
 
-RIGHT = (0, 1)
-DOWN = (1, 0)
-LEFT = (0, -1)
-UP = (-1, 0)
 
-BEAMS = {
-    'right': {'char': '>', },
-    'down': {'char': 'v', },
-    'left': {'char': '<', },
-    'up': {'char': '^', },
-}
 ENCOUNTERS = {
     'right': {
-        '.': RIGHT, '|': [(UP, 'up'), (DOWN, 'down')], '-': RIGHT, '/': UP, '\\': DOWN,
+        '.': RIGHT, '|': [UP, DOWN], '-': RIGHT, '/': UP, '\\': DOWN,
     },
     'down': {
-        '.': DOWN, '|': DOWN, '-': [(LEFT, 'left'), (RIGHT, 'right')], '/': LEFT, '\\': RIGHT,
+        '.': DOWN, '|': DOWN, '-': [LEFT, RIGHT], '/': LEFT, '\\': RIGHT,
     },
     'left': {
-        '.': LEFT, '|': [(UP, 'up'), (DOWN, 'down')], '-': LEFT, '/': DOWN, '\\': UP,
+        '.': LEFT, '|': [UP, DOWN], '-': LEFT, '/': DOWN, '\\': UP,
     },
     'up': {
-        '.': UP, '|': UP, '-': [(LEFT, 'left'), (RIGHT, 'right')], '/': RIGHT, '\\': LEFT,
+        '.': UP, '|': UP, '-': [LEFT, RIGHT], '/': RIGHT, '\\': LEFT,
     },
 }
 
-status: Dict[str, int | str] = {
+status = {
     'row': 0,
     'col': 0,
-    'direction': 'right',
+    'assets': RIGHT,
 }
 
 tracker: Dict[str, List[str]] = {}
 
-def encounter(tile, heading):
+def encounter(tile):
     """
     encounter(grid[status['row'], status['col']], status['direction'])
     call encounter until the next tile is OB
@@ -59,49 +53,53 @@ def encounter(tile, heading):
     match tile:
         case '.':
             # update tracker
-            tracker[f"{status['row']}, {status['col']}"] = list(BEAMS[heading]['char'])
+            tracker[f"{status['row']}, {status['col']}"] = list(status['assets']['char'])
 
-            # change the grid character from . to >, <, ^, or v
-            grid[status['row'], status['col']] = BEAMS[heading]['char']
+            # update the grid character from . to >, <, ^, or v
+            grid[status['row'], status['col']] = status['assets']['char']
 
             # update ROW, COL to reflect next tile
-            status['row'] += ENCOUNTERS[heading]['.'][0]
-            status['col'] += ENCOUNTERS[heading]['.'][1]
+            status['row'] += ENCOUNTERS[status['assets']['heading']]['.']['direction'][0]
+            status['col'] += ENCOUNTERS[status['assets']['heading']]['.']['direction'][1]
 
         case '>' | '<' | '^' | 'v':
             # update the tracker
-            tracker[f"{status['row']}, {status['col']}"].append(BEAMS[heading]['char'])
+            tracker[f"{status['row']}, {status['col']}"].append(status['assets']['char'])
 
             # change this position's character to be len(chars in tracker for position)
             tile = len(tracker[f"{status['row']}, {status['col']}"])
 
             # update ROW, COL to reflect next tile
-            status['row'] += ENCOUNTERS[heading]['.'][0]
-            status['col'] += ENCOUNTERS[heading]['.'][1]
+            status['row'] += ENCOUNTERS[status['assets']['heading']]['.']['direction'][0]
+            status['col'] += ENCOUNTERS[status['assets']['heading']]['.']['direction'][1]
 
         case '|':
-            # update ROW, COL to reflect next tile
-            # write a function to handle splitter
-            """ for split in ENCOUNTERS[heading]['|']:
-                status['direction'] = BEAMS[split]
-                encounter() """
-            pass
+            splits = ENCOUNTERS[status['assets']['heading']]['|']
+            for split in splits:
+                status['row'] += split['direction'][0]
+                status['col'] += split['direction'][1]
+                status['assets'] = split
+                encounter(grid[status['row'], status['col']])
 
         case '-':
-            # write a function to handle splitter
-            print('a hyphen')
+            splits = ENCOUNTERS[status['assets']['heading']]['-']
+            for split in splits:
+                status['row'] += split['direction'][0]
+                status['col'] += split['direction'][1]
+                encounter(grid[status['row'], status['col']])
 
         case '/':
             # update ROW, COL to reflect next tile
-            status['row'] += ENCOUNTERS[heading]['/'][0]
-            status['col'] += ENCOUNTERS[heading]['/'][1]
+            status['row'] += ENCOUNTERS[status['assets']['heading']]['/']['direction'][0]
+            status['col'] += ENCOUNTERS[status['assets']['heading']]['/']['direction'][1]
+            
 
         case '\\':
             # update ROW, COL to reflect next tile
-            status['row'] += ENCOUNTERS[heading]['\\'][0]
-            status['col'] += ENCOUNTERS[heading]['\\'][1]
+            status['row'] += ENCOUNTERS[status['assets']['heading']]['\\']['direction'][0]
+            status['col'] += ENCOUNTERS[status['assets']['heading']]['\\']['direction'][1]
 
-
-""" # Iterate through the array
+ # Iterate through the array
 while 0 <= status['row'] < grid.shape[0] and 0 <= status['col'] < grid.shape[1]:
-    encounter(grid[status['row'], status['col']], status['direction']) """
+    encounter(grid[status['row'], status['col']])
+    print(grid)
